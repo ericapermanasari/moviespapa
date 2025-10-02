@@ -13,5 +13,5 @@ Disallow: /*?filter=
 Crawl-delay: 1
 
 # Sitemaps
-Sitemap: https://123movies-watch.netlify.app/sitemap.xml
+Sitemap: https://moviespapa.netlify.app/sitemap.xml
 
