@@ -3,15 +3,43 @@
 const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const apiUrl = process.env.NEXT_PUBLIC_TMDB_API_URL;
 
-// Fungsi helper untuk fetch data
+// Fungsi helper untuk fetch data dengan CACHE STRATEGY
 const fetchApi = async (path, options = {}) => {
   if (!apiKey || !apiUrl) {
     throw new Error('API keys are not configured. Please check your .env.local file.');
   }
 
   const url = `${apiUrl}${path}?api_key=${apiKey}&language=en-US`;
+  
+  // ✅ PERBAIKAN: Hapus cache: 'no-store', gunakan caching strategy yang tepat
   const res = await fetch(url, {
-    cache: 'no-store', // Memastikan data selalu baru
+    next: { 
+      revalidate: 3600 // Cache 1 jam untuk data yang tidak sering berubah
+    },
+    ...options,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(`API Error: ${errorData.status_message}`);
+  }
+
+  return res.json();
+};
+
+// Fungsi khusus untuk data yang perlu real-time (trending, dll)
+const fetchFreshApi = async (path, options = {}) => {
+  if (!apiKey || !apiUrl) {
+    throw new Error('API keys are not configured. Please check your .env.local file.');
+  }
+
+  const url = `${apiUrl}${path}?api_key=${apiKey}&language=en-US`;
+  
+  // Untuk data yang perlu lebih fresh, cache lebih singkat
+  const res = await fetch(url, {
+    next: { 
+      revalidate: 900 // Cache 15 menit
+    },
     ...options,
   });
 
@@ -114,7 +142,7 @@ export async function getTvSeriesReviews(tvId) {
 // Fungsi untuk mencari film atau serial TV berdasarkan query
 export async function searchMoviesAndTv(query, page = 1) {
   try {
-    const data = await fetchApi(`/search/multi?query=${encodeURIComponent(query)}&page=${page}`);
+    const data = await fetchFreshApi(`/search/multi?query=${encodeURIComponent(query)}&page=${page}`);
     return data.results;
   } catch (error) {
     console.error(`Error fetching search results for query '${query}':`, error);
@@ -125,7 +153,7 @@ export async function searchMoviesAndTv(query, page = 1) {
 // Fungsi untuk mendapatkan film berdasarkan kategori
 export async function getMoviesByCategory(category, page = 1) {
   try {
-    const data = await fetchApi(`/movie/${category}?page=${page}`);
+    const data = await fetchFreshApi(`/movie/${category}?page=${page}`);
     return data.results;
   } catch (error) {
     console.error(`Error fetching ${category} movies:`, error);
@@ -136,7 +164,7 @@ export async function getMoviesByCategory(category, page = 1) {
 // Fungsi untuk mendapatkan serial TV berdasarkan kategori
 export async function getTvSeriesByCategory(category, page = 1) {
   try {
-    const data = await fetchApi(`/tv/${category}?page=${page}`);
+    const data = await fetchFreshApi(`/tv/${category}?page=${page}`);
     return data.results;
   } catch (error) {
     console.error(`Error fetching ${category} TV series:`, error);
@@ -169,7 +197,7 @@ export async function getSimilarTvSeries(tvId) {
 // Fungsi untuk mencari film berdasarkan judul
 export const getMovieByTitle = async (title) => {
     try {
-        const data = await fetchApi(`/search/movie?query=${encodeURIComponent(title)}`);
+        const data = await fetchFreshApi(`/search/movie?query=${encodeURIComponent(title)}`);
         return data.results && data.results.length > 0 ? data.results : null;
     } catch (error) {
         console.error(`Error fetching movie by title: ${title}`, error);
@@ -180,7 +208,7 @@ export const getMovieByTitle = async (title) => {
 // Fungsi untuk mencari serial TV berdasarkan judul
 export const getTvSeriesByTitle = async (title) => {
   try {
-    const data = await fetchApi(`/search/tv?query=${encodeURIComponent(title)}`);
+    const data = await fetchFreshApi(`/search/tv?query=${encodeURIComponent(title)}`);
     return data.results && data.results.length > 0 ? data.results : null;
   } catch (error) {
     console.error(`Error fetching TV series by title: ${title}`, error);
@@ -191,7 +219,7 @@ export const getTvSeriesByTitle = async (title) => {
 // Fungsi untuk mendapatkan daftar genre film
 export async function getMovieGenres() {
   try {
-    const data = await fetchApi('/genre/movie/list');
+    const data = await fetchApi('/genre/movie/list'); // Genre jarang berubah
     return data.genres;
   } catch (error) {
     console.error('Error fetching movie genres:', error);
@@ -202,7 +230,7 @@ export async function getMovieGenres() {
 // Fungsi untuk mendapatkan daftar genre serial TV
 export async function getTvSeriesGenres() {
   try {
-    const data = await fetchApi('/genre/tv/list');
+    const data = await fetchApi('/genre/tv/list'); // Genre jarang berubah
     return data.genres;
   } catch (error) {
     console.error('Error fetching TV series genres:', error);
@@ -213,7 +241,7 @@ export async function getTvSeriesGenres() {
 // Fungsi untuk mendapatkan film berdasarkan genre
 export async function getMoviesByGenre(genreId, page = 1) {
   try {
-    const data = await fetchApi(`/discover/movie?with_genres=${genreId}&page=${page}`);
+    const data = await fetchFreshApi(`/discover/movie?with_genres=${genreId}&page=${page}`);
     return data.results;
   } catch (error) {
     console.error(`Error fetching movies by genre ID ${genreId}:`, error);
@@ -224,7 +252,7 @@ export async function getMoviesByGenre(genreId, page = 1) {
 // Fungsi untuk mendapatkan serial TV berdasarkan genre
 export async function getTvSeriesByGenre(genreId, page = 1) {
   try {
-    const data = await fetchApi(`/discover/tv?with_genres=${genreId}&page=${page}`);
+    const data = await fetchFreshApi(`/discover/tv?with_genres=${genreId}&page=${page}`);
     return data.results;
   } catch (error) {
     console.error(`Error fetching TV series by genre ID ${genreId}:`, error);
@@ -235,7 +263,7 @@ export async function getTvSeriesByGenre(genreId, page = 1) {
 // Fungsi untuk mendapatkan film trending harian
 export async function getTrendingMoviesDaily(page = 1) {
   try {
-    const data = await fetchApi(`/trending/movie/day?page=${page}`);
+    const data = await fetchFreshApi(`/trending/movie/day?page=${page}`);
     return data.results;
   } catch (error) {
     console.error('Error fetching daily trending movies:', error);
@@ -246,7 +274,7 @@ export async function getTrendingMoviesDaily(page = 1) {
 // Fungsi untuk mendapatkan serial TV trending harian
 export async function getTrendingTvSeriesDaily(page = 1) {
   try {
-    const data = await fetchApi(`/trending/tv/day?page=${page}`);
+    const data = await fetchFreshApi(`/trending/tv/day?page=${page}`);
     return data.results;
   } catch (error) {
     console.error('Error fetching daily trending TV series:', error);
@@ -258,7 +286,7 @@ export async function getTrendingTvSeriesDaily(page = 1) {
 export async function getMoviesByKeyword(keywordId = 256466, page = 1) {
   try {
     console.log(`Fetching movies by keyword: ${keywordId}, page: ${page}`);
-    const data = await fetchApi(`/discover/movie?with_keywords=${keywordId}&page=${page}`);
+    const data = await fetchFreshApi(`/discover/movie?with_keywords=${keywordId}&page=${page}`);
     console.log(`Movies by keyword result:`, data.results?.length || 0);
     return data.results || [];
   } catch (error) {
@@ -271,7 +299,7 @@ export async function getMoviesByKeyword(keywordId = 256466, page = 1) {
 export async function getMoviesByList(listId = "143347", page = 1) {
   try {
     console.log(`Fetching movies from list: ${listId}, page: ${page}`);
-    const data = await fetchApi(`/list/${listId}?page=${page}`);
+    const data = await fetchFreshApi(`/list/${listId}?page=${page}`);
     console.log(`Movies from list result:`, data.items?.length || 0);
     return data.items || [];
   } catch (error) {

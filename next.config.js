@@ -21,6 +21,12 @@ const nextConfig = {
       },
     ],
   },
+  // ✅ PERBAIKAN: Ganti experimental.turbo dengan turbopack
+  turbopack: {
+    // Konfigurasi turbopack (jika ada)
+  },
+  // Opsional: untuk optimisasi deployment
+  output: 'standalone', 
 }
 
 module.exports = nextConfig;

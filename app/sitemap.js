@@ -11,8 +11,8 @@ import {
 const BASE_URL = 'https://moviespapa-hd.netlify.app';
 
 // Konfigurasi
-const MAX_DETAIL_URLS = 500;
-const MAX_PAGES = 3;
+const MAX_DETAIL_URLS = 100; // Kurangi untuk build pertama
+const MAX_PAGES = 2; // Kurangi jumlah halaman
 
 // Fungsi utilitas untuk membuat slug
 const createSlug = (name, year) => {
@@ -55,7 +55,7 @@ const calculatePriority = (url) => {
   return 0.9;
 };
 
-// Fungsi untuk mendapatkan data dengan pagination
+// Fungsi untuk mendapatkan data dengan pagination dan CACHE
 const getPaginatedData = async (fetchFunction, identifier, pageCount = MAX_PAGES) => {
   const promises = [];
   for (let page = 1; page <= pageCount; page++) {
@@ -75,7 +75,7 @@ const getPaginatedData = async (fetchFunction, identifier, pageCount = MAX_PAGES
     .filter(Boolean);
 };
 
-// Konfigurasi caching untuk sitemap
+// KONFIGURASI CACHE UNTUK SITEMAP - PERBAIKAN UTAMA
 export const revalidate = 86400; // 24 jam
 
 export default async function sitemap() {
@@ -85,7 +85,7 @@ export default async function sitemap() {
   try {
     console.log('🔄 Memulai generate sitemap...');
 
-    // Ambil genres dengan error handling
+    // Ambil genres dengan error handling dan CACHE
     const [movieGenres, tvGenres] = await Promise.allSettled([
       getMovieGenres(),
       getTvSeriesGenres()
@@ -95,26 +95,22 @@ export default async function sitemap() {
 
     console.log(`🎬 Genre film: ${movieGenres.length}, Genre TV: ${tvGenres.length}`);
 
-    // Ambil data dari semua kategori dengan pagination
+    // Jika tidak ada genres, return sitemap minimal
+    if (movieGenres.length === 0 && tvGenres.length === 0) {
+      console.log('⚠️ Tidak ada data genre, menggunakan sitemap fallback');
+      return getFallbackSitemap();
+    }
+
+    // Ambil data dari semua kategori dengan pagination terbatas
     const allPromises = await Promise.allSettled([
-      // Movie categories dengan pagination
+      // Movie categories dengan pagination minimal
       Promise.all(movieCategories.map(category => 
-        getPaginatedData(getMoviesByCategory, category, 2)
+        getPaginatedData(getMoviesByCategory, category, 1) // Hanya 1 halaman
       )),
       
-      // Movie genres dengan pagination (masih pakai ID untuk fetch data)
-      Promise.all(movieGenres.map(genre => 
-        getPaginatedData(getMoviesByGenre, genre.id, 1)
-      )),
-      
-      // TV categories dengan pagination
+      // TV categories dengan pagination minimal  
       Promise.all(tvCategories.map(category => 
-        getPaginatedData(getTvSeriesByCategory, category, 2)
-      )),
-      
-      // TV genres dengan pagination (masih pakai ID untuk fetch data)
-      Promise.all(tvGenres.map(genre => 
-        getPaginatedData(getTvSeriesByGenre, genre.id, 1)
+        getPaginatedData(getTvSeriesByCategory, category, 1) // Hanya 1 halaman
       ))
     ]);
 
@@ -122,19 +118,19 @@ export default async function sitemap() {
     const extractData = (result) => 
       result.status === 'fulfilled' ? result.value.flat().filter(Boolean) : [];
 
-    const [movieCats, movieGens, tvCats, tvGens] = allPromises.map(extractData);
+    const [movieCats, tvCats] = allPromises.map(extractData);
 
-    // Gabungkan dan hapus duplikat
-    const allMovies = [...movieCats, ...movieGens];
-    const allTvShows = [...tvCats, ...tvGens];
+    // Gabungkan data (skip genre data untuk mengurangi API calls)
+    const allMovies = [...movieCats];
+    const allTvShows = [...tvCats];
 
     const uniqueMovies = Array.from(new Map(
       allMovies.filter(m => m?.id && m?.title).map(m => [m.id, m])
-    ).values());
+    ).values()).slice(0, MAX_DETAIL_URLS); // Batasi langsung
 
     const uniqueTvShows = Array.from(new Map(
       allTvShows.filter(tv => tv?.id && tv?.name).map(tv => [tv.id, tv])
-    ).values());
+    ).values()).slice(0, MAX_DETAIL_URLS); // Batasi langsung
 
     console.log(`📊 Film unik: ${uniqueMovies.length}, TV unik: ${uniqueTvShows.length}`);
 
@@ -169,6 +165,42 @@ export default async function sitemap() {
         lastModified: new Date(),
         changeFrequency: 'monthly',
         priority: 0.8
+      },
+      {
+        url: `${BASE_URL}/adult/adult-movies`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.3
+      },
+      {
+        url: `${BASE_URL}/adult/erotic-movies`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.3
+      },
+      {
+        url: `${BASE_URL}/contact`,
+        lastModified: new Date(),
+        changeFrequency: 'yearly',
+        priority: 0.1
+      },
+      {
+        url: `${BASE_URL}/dmca`,
+        lastModified: new Date(),
+        changeFrequency: 'yearly',
+        priority: 0.1
+      },
+      {
+        url: `${BASE_URL}/privacy-policy`,
+        lastModified: new Date(),
+        changeFrequency: 'yearly',
+        priority: 0.1
+      },
+      {
+        url: `${BASE_URL}/terms-of-service`,
+        lastModified: new Date(),
+        changeFrequency: 'yearly',
+        priority: 0.1
       }
     ];
 
@@ -188,8 +220,8 @@ export default async function sitemap() {
       priority: calculatePriority(`${BASE_URL}/tv-show/${category}`)
     }));
 
-    // URL Genre Film (SEKARANG DENGAN NAMA GENRE)
-    const movieGenreUrls = movieGenres.map(genre => {
+    // URL Genre Film (HANYA URL, TANPA FETCH DATA)
+    const movieGenreUrls = movieGenres.slice(0, 5).map(genre => { // Batasi genre
       const genreSlug = createGenreSlug(genre.name);
       return {
         url: `${BASE_URL}/movie/genre/${genreSlug}`,
@@ -199,8 +231,8 @@ export default async function sitemap() {
       };
     });
 
-    // URL Genre TV (SEKARANG DENGAN NAMA GENRE)
-    const tvGenreUrls = tvGenres.map(genre => {
+    // URL Genre TV (HANYA URL, TANPA FETCH DATA)  
+    const tvGenreUrls = tvGenres.slice(0, 5).map(genre => { // Batasi genre
       const genreSlug = createGenreSlug(genre.name);
       return {
         url: `${BASE_URL}/tv-show/genre/${genreSlug}`,
@@ -210,12 +242,8 @@ export default async function sitemap() {
       };
     });
 
-    // Batasi jumlah URL detail
-    const limitedMovies = uniqueMovies.slice(0, MAX_DETAIL_URLS);
-    const limitedTvShows = uniqueTvShows.slice(0, MAX_DETAIL_URLS);
-
-    // URL Detail Film
-    const movieDetailUrls = limitedMovies.map(movie => {
+    // URL Detail Film (TERBATAS)
+    const movieDetailUrls = uniqueMovies.map(movie => {
       const year = movie.release_date?.substring(0, 4);
       const slug = createSlug(movie.title, year);
       
@@ -235,8 +263,8 @@ export default async function sitemap() {
       ];
     }).flat();
 
-    // URL Detail TV Show
-    const tvDetailUrls = limitedTvShows.map(tvShow => {
+    // URL Detail TV Show (TERBATAS)
+    const tvDetailUrls = uniqueTvShows.map(tvShow => {
       const year = tvShow.first_air_date?.substring(0, 4);
       const slug = createSlug(tvShow.name, year);
       
@@ -274,33 +302,44 @@ export default async function sitemap() {
 
   } catch (error) {
     console.error('❌ Error generating sitemap:', error);
-    
-    // Fallback minimal sitemap
-    return [
-      {
-        url: `${BASE_URL}/`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 1.0
-      },
-      {
-        url: `${BASE_URL}/movie`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.9
-      },
-      {
-        url: `${BASE_URL}/tv-show`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.9
-      },
-      {
-        url: `${BASE_URL}/trending`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.9
-      }
-    ];
+    return getFallbackSitemap();
   }
+}
+
+// Fallback sitemap minimal
+function getFallbackSitemap() {
+  const BASE_URL = 'https://moviespapa.netlify.app';
+  
+  return [
+    {
+      url: `${BASE_URL}/`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1.0
+    },
+    {
+      url: `${BASE_URL}/movie`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9
+    },
+    {
+      url: `${BASE_URL}/tv-show`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9
+    },
+    {
+      url: `${BASE_URL}/trending`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9
+    },
+    {
+      url: `${BASE_URL}/search`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8
+    }
+  ];
 }
