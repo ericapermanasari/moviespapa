@@ -103,7 +103,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: tvShowData.name,
       description: tvShowData.overview,
-      url: `https://Moviespapa.netlify.app/tv-show/${slug}`,
+      url: `https://moviespapa.netlify.app/tv-show/${slug}`,
       siteName: 'Moviespapa',
       images: [{ url: socialImage, width: 1200, height: 630, alt: socialImageAlt }],
       locale: 'en_US',

@@ -40,8 +40,8 @@ export async function generateMetadata({ params }) {
 
   const title = genre?.name || 'Unknown';
   
-  const pageUrl = `https://Moviespapa.netlify.app/tv-show/genre/${genreName}`;
-  const imageUrl = 'https://live.staticflickr.com/65535/54812286746_f853554453_b.jpg';
+  const pageUrl = `https://moviespapa.netlify.app/tv-show/genre/${genreName}`;
+  const imageUrl = 'https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg';
 
   return {
     title: `Moviespapa - ${title} TV Series`,

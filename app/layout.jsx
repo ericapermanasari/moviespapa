@@ -9,11 +9,11 @@ export const metadata = {
   openGraph: {
     title: 'Moviespapa | Watch Movie Stream Movies and Tv Series Free',
     description: 'Moviespapa is your one-stop destination for free movies, TV shows, and web series. Download thousands of titles in HD quality, with unlimited access to the latest blockbusters and trending series. Start your free entertainment journey today! ',
-    url: 'https://Moviespapa-hd.netlify.app',
+    url: 'https://moviespapa.netlify.app',
     siteName: 'Moviespapa',
     images: [
       {
-        url: 'https://live.staticflickr.com/65535/54812286746_f853554453_b.jpg',
+        url: 'https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg',
         width: 1200,
         height: 630,
         alt: 'Moviespapa - Watch Movie Stream Movies and Tv Series Free',
@@ -28,7 +28,7 @@ export const metadata = {
     creator: '@WatchStream123',
     title: 'Moviespapa | Watch Movie Stream Movies and Tv Series Free',
     description: 'Moviespapa is your one-stop destination for free movies, TV shows, and web series. Download thousands of titles in HD quality, with unlimited access to the latest blockbusters and trending series. Start your free entertainment journey today!',
-    images: ['https://live.staticflickr.com/65535/54812286746_f853554453_b.jpg'],
+    images: ['https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg'],
   },
   // Tambahkan tag meta eksplisit untuk Facebook
   other: {
