@@ -40,17 +40,17 @@ export async function generateMetadata({ params }) {
 
   const title = genre?.name || 'Unknown';
   
-  const pageUrl = `https://123movies-watch.netlify.app/tv-show/genre/${genreName}`;
+  const pageUrl = `https://Moviespapa.netlify.app/tv-show/genre/${genreName}`;
   const imageUrl = 'https://live.staticflickr.com/65535/54812286746_f853554453_b.jpg';
 
   return {
-    title: `123Movies - ${title} TV Series`,
-    description: `Find and watch the best ${title} TV series for free on 123Movies.`,
+    title: `Moviespapa - ${title} TV Series`,
+    description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
     openGraph: {
-      title: `123Movies - ${title} TV Series`,
-      description: `Find and watch the best ${title} TV series for free on 123Movies.`,
+      title: `Moviespapa - ${title} TV Series`,
+      description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
       url: pageUrl,
-      siteName: '123Movies',
+      siteName: 'Moviespapa',
       images: [
         {
           url: imageUrl,
@@ -66,8 +66,8 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       site: '@WatchStream123',
       creator: '@WatchStream123',
-      title: `123Movies - ${title} TV Series`,
-      description: `Find and watch the best ${title} TV series for free on 123Movies.`,
+      title: `Moviespapa - ${title} TV Series`,
+      description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
       images: [imageUrl],
     },
     other: {

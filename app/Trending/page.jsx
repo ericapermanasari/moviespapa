@@ -12,7 +12,7 @@ export default async function TrendingPage() {
   return (
     <>
       <Head>
-        <title>Daily Trending - Layar Kaca</title>
+        <title>Daily Trending - Moviespapa</title>
       </Head>
       <TrendingClient 
         initialMovies={trendingMovies} 
