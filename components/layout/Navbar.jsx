@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { FaVideo, FaChevronDown, FaBars, FaTimes, FaExclamationTriangle, FaFire, FaStar, FaPlayCircle } from 'react-icons/fa';
+import { FaVideo, FaChevronDown, FaBars, FaTimes, FaExclamationTriangle, FaFire, FaStar, FaPlayCircle, FaSearch, FaCrown } from 'react-icons/fa';
 import { getMovieGenres, getTvSeriesGenres } from '../../lib/api';
 import SearchBar from '../SearchBar';
 import { useEffect, useState } from 'react';
@@ -13,14 +13,14 @@ const subDropdownItemClass = "block w-full text-left px-4 py-2.5 text-sm text-gr
 // Reusable class for sub-dropdown triggers
 const subDropdownTriggerClass = "flex justify-between items-center w-full px-4 py-3 text-sm text-gray-200 hover:bg-gradient-to-r hover:from-blue-700 hover:to-blue-800 cursor-pointer rounded-md";
 
-// PERBAIKAN: Utility function to create a slug from a genre name
+// Utility function to create a slug from a genre name
 const createSlug = (name) => {
   if (!name) return '';
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter tidak valid
-    .replace(/\s+/g, '-') // Ganti spasi dengan dash
-    .replace(/-+/g, '-') // Gabungkan multiple dash
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
     .trim();
 };
 
@@ -167,7 +167,7 @@ export default function Navbar() {
     { href: "/movie/popular", label: "Popular", icon: FaFire },
     { href: "/movie/now_playing", label: "Now Playing", icon: FaPlayCircle },
     { href: "/movie/upcoming", label: "Upcoming", icon: FaStar },
-    { href: "/movie/top_rated", label: "Top Rated", icon: FaStar },
+    { href: "/movie/top_rated", label: "Top Rated", icon: FaCrown },
   ];
 
   // TV Series categories with icons
@@ -175,15 +175,15 @@ export default function Navbar() {
     { href: "/tv-show/popular", label: "Popular", icon: FaFire },
     { href: "/tv-show/airing_today", label: "Airing Today", icon: FaPlayCircle },
     { href: "/tv-show/on_the_air", label: "On The Air", icon: FaStar },
-    { href: "/tv-show/top_rated", label: "Top Rated", icon: FaStar },
+    { href: "/tv-show/top_rated", label: "Top Rated", icon: FaCrown },
   ];
 
   return (
-    <nav className={`bg-gradient-to-r from-slate-900 via-pink-900 to-slate-900 dark:from-gray-900 dark:via-pink-900 dark:to-gray-900 p-4 sticky top-0 z-50 shadow-2xl transition-all duration-500 ${isScrolled ? 'py-3 shadow-2xl backdrop-blur-md bg-slate-900/95' : 'py-4'}`}>
+    <nav className={`bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 p-4 sticky top-0 z-50 shadow-2xl transition-all duration-500 ${isScrolled ? 'py-3 shadow-2xl backdrop-blur-md bg-slate-900/95' : 'py-4'}`}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-6">
           {/* Logo dengan efek glow */}
-          <Link href="/" className="flex items-center text-3xl font-bold transition-all duration-500 group relative">
+          <Link href="/" className="flex items-center text-2xl font-bold transition-all duration-500 group relative">
             <div className="relative">
               <FaVideo className="text-white mr-3 group-hover:text-yellow-300 transition-colors duration-300 group-hover:scale-110 drop-shadow-lg" />
               <div className="absolute inset-0 bg-yellow-400 rounded-full blur-sm group-hover:blur-md opacity-70 group-hover:opacity-90 transition-all duration-500"></div>
