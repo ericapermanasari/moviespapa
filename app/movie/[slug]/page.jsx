@@ -39,8 +39,8 @@ export async function generateMetadata({ params }) {
   if (CATEGORIES.includes(slug)) {
     const title = slug.replace(/_/g, ' ').toUpperCase();
     return {
-      title: `MovieMovies - ${title} Movies`,
-      description: `Explore the ${title} movies collection on MovieMovies.`,
+      title: `MoviesPapa - ${title} Movies`,
+      description: `Explore the ${title} movies collection on MoviesPapa.`,
     };
   }
 
@@ -51,8 +51,8 @@ export async function generateMetadata({ params }) {
     const genres = await getMovieGenres();
     const genreName = genres.find(g => g.id == genreId)?.name || 'Unknown';
     return {
-      title: `MovieMovies - ${genreName} Movies`,
-      description: `Discover ${genreName} movies on MovieMovies.`,
+      title: `MoviesPapa - ${genreName} Movies`,
+      description: `Discover ${genreName} movies on MoviesPapa.`,
     };
   }
 
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }) {
   // Jika data tidak ditemukan, kembalikan metadata dasar
   if (!movieData) {
     return {
-      title: 'MovieMovies',
+      title: 'MoviesPapa',
       description: 'Watch Movie Stream Movies and Tv Series Free.',
     };
   }
@@ -99,13 +99,13 @@ export async function generateMetadata({ params }) {
   const socialImageAlt = `${movieData.title} poster`;
 
   return {
-    title: `MovieMovies - ${movieData.title}`,
+    title: `MoviesPapa - ${movieData.title}`,
     description: movieData.overview || `Detailed information for movie ${movieData.title}`,
     openGraph: {
       title: movieData.title,
       description: movieData.overview || `Detailed information for movie ${movieData.title}`,
-      url: `https://moviemovies.vercel.app/movie/${slug}`,
-      siteName: 'MovieMovies',
+      url: `https://moviespapa.netlify.app/movie/${slug}`,
+      siteName: 'MoviesPapa',
       images: [
         {
           url: socialImage,

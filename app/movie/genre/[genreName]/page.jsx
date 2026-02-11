@@ -14,17 +14,17 @@ export async function generateMetadata({ params }) {
   const genre = genres.find(g => g.name.toLowerCase().replace(/\s/g, '-') === genreName);
   const title = genre?.name || 'Unknown';
 
-  const pageUrl = `https://moviemovies.vercel.app/movie/genre/${genreName}`;
-  const imageUrl = 'https://live.staticflickr.com/65535/54804572135_3f755a60e7_b.jpg';
+  const pageUrl = `https://moviespapa.netlify.app/movie/genre/${genreName}`;
+  const imageUrl = 'https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg';
 
   return {
-    title: `MovieMovies - ${title} Movies`,
-    description: `Find and watch the best ${title} movies for free on MovieMovies.`,
+    title: `MoviesPapa - ${title} Movies`,
+    description: `Find and watch the best ${title} movies for free on MoviesPapa.`,
     openGraph: {
-      title: `MovieMovies - ${title} Movies`,
-      description: `Find and watch the best ${title} movies for free on MovieMovies.`,
+      title: `MoviesPapa - ${title} Movies`,
+      description: `Find and watch the best ${title} movies for free on MoviesPapa.`,
       url: pageUrl,
-      siteName: 'MovieMovies',
+      siteName: 'MoviesPapa',
       images: [
         {
           url: imageUrl,
@@ -40,8 +40,8 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       site: '@WatchStream123',
       creator: '@WatchStream123',
-      title: `MovieMovies - ${title} Movies`,
-      description: `Find and watch the best ${title} movies for free on MovieMovies.`,
+      title: `MoviesPapa - ${title} Movies`,
+      description: `Find and watch the best ${title} movies for free on MoviesPapa.`,
       images: [imageUrl],
     },
     other: {
