@@ -1,260 +1,534 @@
-"use client";
-
 import React from 'react';
 import Link from 'next/link';
-import { FaHome, FaFilm, FaTv, FaSearch, FaStar, FaUsers, FaGlobe, FaPlay, FaAward, FaCalendarAlt, FaHeart, FaRocket, FaEye, FaCrown, FaShieldAlt } from 'react-icons/fa';
+import Image from 'next/image';
+import { FaFire, FaStar, FaTv, FaFilm, FaUser, FaTrophy, FaQuestionCircle, FaSearch, FaCalendarAlt, FaVideo } from 'react-icons/fa';
 
-export default function About() {
+// Data genre dari file awal dengan link yang benar
+const genres = [
+  { name: 'Action', link: '/movie/genre/action', color: 'text-orange-300' },
+  { name: 'Adventure', link: '/movie/genre/adventure', color: 'text-blue-300' },
+  { name: 'Sci-Fi', link: '/movie/genre/science-fiction', color: 'text-purple-300' },
+  { name: 'Anime', link: '/movie/genre/animation', color: 'text-pink-300' },
+  { name: 'Crime', link: '/movie/genre/crime', color: 'text-yellow-300' },
+  { name: 'Horror', link: '/movie/genre/horror', color: 'text-red-300' },
+  { name: 'Comedy', link: '/movie/genre/comedy', color: 'text-green-300' },
+  { name: 'Romance', link: '/movie/genre/romance', color: 'text-pink-400' },
+  { name: 'Thriller', link: '/movie/genre/thriller', color: 'text-indigo-300' },
+  { name: 'Mystery', link: '/movie/genre/mystery', color: 'text-gray-300' },
+  { name: 'War', link: '/movie/genre/war', color: 'text-amber-300' },
+  { name: 'Fantasy', link: '/movie/genre/fantasy', color: 'text-teal-300' },
+];
+
+// API functions
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+const BASE_URL = 'https://api.themoviedb.org/3';
+
+async function getTrendingDaily() {
+  try {
+    const response = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US&page=1`, {
+      next: { revalidate: 3600 } // Revalidate every hour
+    });
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Error fetching trending content:', error);
+    return [];
+  }
+}
+
+// Utility function untuk membuat slug TANPA ID
+const createMovieSlug = (item) => {
+  const title = item.title || item.name;
+  if (!title) return 'unknown';
+  
+  const baseSlug = title.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+  
+  const year = item.release_date ? 
+    item.release_date.substring(0, 4) : 
+    (item.first_air_date ? item.first_air_date.substring(0, 4) : '2024');
+  
+  return `${baseSlug}-${year}`;
+};
+
+// MediaCard component untuk trending content
+const MediaCard = ({ item }) => {
+  const isTV = item.media_type === 'tv' || item.name;
+  const title = item.title || item.name;
+  const date = isTV ? item.first_air_date : item.release_date;
+  const year = date ? new Date(date).getFullYear() : 'TBA';
+  
+  const slug = createMovieSlug(item);
+  
   return (
-    <div className="min-h-screen bg-slate-900 text-gray-300">
-      {/* Enhanced Hero Section dengan animasi yang lebih halus */}
-      <div className="relative bg-gradient-to-br from-orange-900/80 via-purple-900/60 to-slate-900 py-24 overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1489599809519-364a47ae3cde?ixlib=rb-4.0.3')] bg-cover bg-center mix-blend-overlay opacity-10"></div>
+    <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-700 hover:border-slate-600 transition-colors" itemScope itemType={isTV ? "https://schema.org/TVSeries" : "https://schema.org/Movie"}>
+      <Link href={isTV ? `/tv-show/${slug}` : `/movie/${slug}`} className="block">
+        <div className="relative aspect-[2/3] overflow-hidden">
+          {item.poster_path ? (
+            <Image
+              src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+              alt={`${title} poster - ${isTV ? 'TV Series' : 'Movie'} from ${year}`}
+              width={500}
+              height={750}
+              className="object-cover w-full h-full"
+              unoptimized={false}
+              priority={false}
+              itemProp="image"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+              {isTV ? <FaTv className="text-4xl text-gray-500" /> : <FaFilm className="text-4xl text-gray-500" />}
+            </div>
+          )}
+          
+          {/* Type Badge */}
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+            {isTV ? 'TV' : 'Movie'}
+          </div>
+          
+          {/* Rating */}
+          {item.vote_average > 0 && (
+            <div className="absolute top-2 right-2 bg-purple-900 text-white text-xs px-2 py-1 rounded font-bold flex items-center gap-1">
+              ⭐ {item.vote_average.toFixed(1)}
+            </div>
+          )}
+        </div>
         
-        {/* Floating animation elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-orange-500/20 rounded-full blur-xl animate-float-slow"></div>
-        <div className="absolute bottom-10 right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-float-medium"></div>
-        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-yellow-500/15 rounded-full blur-lg animate-float-fast"></div>
-        
+        <div className="p-3">
+          <h3 className="font-semibold text-white text-sm line-clamp-1 mb-1" itemProp="name">
+            {title}
+          </h3>
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span itemProp="datePublished">{year}</span>
+            <span className={`px-2 py-1 rounded ${isTV ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+              {isTV ? 'TV Series' : 'Movie'}
+            </span>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+};
+
+// Breadcrumb Component
+const Breadcrumb = () => (
+  <nav className="container mx-auto px-4 py-2" aria-label="Breadcrumb">
+    <ol className="flex items-center space-x-2 text-sm text-gray-400">
+      <li>
+        <Link href="/" className="hover:text-white transition-colors" itemProp="item">
+          <span itemProp="name">Home</span>
+        </Link>
+        <meta itemProp="position" content="1" />
+      </li>
+      <li className="flex items-center">
+        <span className="mx-2">/</span>
+      </li>
+      <li className="text-white" aria-current="page">
+        <span itemProp="name">Trending Movies & TV Shows</span>
+        <meta itemProp="position" content="2" />
+      </li>
+    </ol>
+  </nav>
+);
+
+export default async function HomePage() {
+  let trendingContent = [];
+  let movieCount = 0;
+  let tvCount = 0;
+
+  try {
+    const trendingData = await getTrendingDaily();
+    
+    trendingContent = trendingData
+      .filter(item => item.poster_path)
+      .slice(0, 20);
+    
+    movieCount = trendingContent.filter(item => item.media_type === 'movie' || item.title).length;
+    tvCount = trendingContent.filter(item => item.media_type === 'tv' || item.name).length;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+
+  // Schema Markup untuk SEO
+  const schemaMarkup = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://moviespapa.netlify.app/#website",
+        "url": "https://moviespapa.netlify.app/",
+        "name": "MoviesPapa",
+        "description": "Discover trending movies and TV series to stream today across Netflix, Disney+, Prime Video, Hulu, HBO Max and other streaming platforms",
+        "potentialAction": [{
+          "@type": "SearchAction",
+          "target": "https://moviespapa.netlify.app/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://moviespapa.netlify.app/#webpage",
+        "url": "https://moviespapa.netlify.app/",
+        "name": "MoviesPapa | Trending Movies & TV Shows to Stream Today",
+        "description": "Watch trending movies and TV series for free. Discover what's popular today across Netflix, Disney+, Prime Video. Daily updated trending content.",
+        "isPartOf": { "@id": "https://moviespapa.netlify.app/#website" },
+        "about": "Movie and TV show streaming guide",
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg",
+          "width": 1200,
+          "height": 630
+        },
+        "datePublished": "2024-01-01",
+        "dateModified": new Date().toISOString().split('T')[0],
+        "breadcrumb": { "@id": "https://moviespapa.netlify.app/#breadcrumb" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://moviespapa.netlify.app/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://moviespapa.netlify.app/"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How often is trending content updated on MoviesPapa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We update trending movies and TV shows daily with the latest data from all major streaming platforms including Netflix, Disney+, Prime Video, Hulu, and HBO Max."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I find where to stream movies for free on MoviesPapa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! MoviesPapa provides information on both free streaming options (ad-supported platforms) and premium subscription services, helping you find the most cost-effective way to watch your favorite content."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does MoviesPapa cover international movies and TV shows?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Absolutely. We track trending content from Hollywood blockbusters to international cinema, including anime, Korean dramas, European films, and content from around the world."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does MoviesPapa determine what's trending?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Our algorithm analyzes daily popularity spikes, social media buzz, streaming platform data, and viewer engagement metrics to determine what people are watching right now across all major services."
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      {/* JSON-LD Schema Markup */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }}
+      />
+      
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
+
+      {/* Hero Section dengan H1 yang dioptimalkan */}
+      <section className="relative bg-gradient-to-r from-purple-900/80 to-slate-900 py-16 lg:py-20" itemScope itemType="https://schema.org/WPHeader">
+        <div className="absolute inset-0 bg-black/20"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500/25 to-purple-500/25 px-6 py-3 rounded-full mb-8 border border-orange-500/30 backdrop-blur-sm">
-            <FaCrown className="text-yellow-400 text-lg" />
-            <span className="text-yellow-300 font-bold text-lg">#1 Movie Database in United States</span>
-          </div>
-          
-          <h1 className="text-5xl md:text-8xl font-black mb-8 bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent animate-glow">
-            Moviespapa
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 text-white" itemProp="headline">
+            MoviesPapa | Trending Movies & TV Shows to Stream Today
           </h1>
-          <p className="text-2xl md:text-4xl font-light mb-6 text-gray-200 animate-fade-in">
-            Ultimate Movie & TV Series Database
-          </p>
-          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed animate-slide-up">
-            Your ultimate guide to <span className="text-orange-400 font-bold">10,000+ movies</span>, <span className="text-purple-400 font-bold">5,000+ TV series</span>, expert reviews, and real-time streaming availability. Discover cinematic masterpieces with our intelligent recommendation system.
+          <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto" itemProp="description">
+            Discover what's trending right now across all streaming platforms. Daily updated with the hottest movies and TV series available to watch online.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-6 mb-12">
-            <Link href="/" className="group bg-gradient-to-r from-blue-600 to-purple-700 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-orange-500/30 hover:scale-105 transform-gpu">
-              <FaHome className="text-xl group-hover:scale-125 transition-transform duration-300" /> 
-              Explore Home
-            </Link>
-            <Link href="/movie/genre/action" className="group bg-gradient-to-r from-green-600 to-emerald-700 hover:from-blue-600 hover:to-blue-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-blue-500/30 hover:scale-105 transform-gpu">
-              <FaFilm className="text-xl group-hover:scale-125 transition-transform duration-300" /> 
-              Browse Movies
-            </Link>
-            <Link href="/tv-show/genre/drama" className="group bg-gradient-to-r from-red-600 to-pink-700 hover:from-purple-600 hover:to-purple-700 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-purple-500/30 hover:scale-105 transform-gpu">
-              <FaTv className="text-xl group-hover:scale-125 transition-transform duration-300" /> 
-              TV Series
-            </Link>
-          </div>
-          
-          <div className="flex flex-wrap justify-center items-center gap-8 text-lg text-gray-400">
-            <div className="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full backdrop-blur-sm">
-              <FaEye className="text-green-400 text-xl" />
-              <span>Real-time Updates</span>
-            </div>
-            <div className="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full backdrop-blur-sm">
-              <FaShieldAlt className="text-blue-400 text-xl" />
-              <span>Verified Content</span>
-            </div>
-            <div className="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full backdrop-blur-sm">
-              <FaRocket className="text-yellow-400 text-xl" />
-              <span>Lightning Fast</span>
-            </div>
+          {/* LSI Keywords Section */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            <span className="bg-slate-800/50 text-gray-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+              <FaVideo className="text-xs" /> binge-watch series
+            </span>
+            <span className="bg-slate-800/50 text-gray-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+              <FaSearch className="text-xs" /> movie recommendations
+            </span>
+            <span className="bg-slate-800/50 text-gray-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+              <FaCalendarAlt className="text-xs" /> new releases 2024
+            </span>
+            <span className="bg-slate-800/50 text-gray-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+              <FaStar className="text-xs" /> top rated shows
+            </span>
+            <span className="bg-slate-800/50 text-gray-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+              <FaTv className="text-xs" /> streaming guide
+            </span>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-4 py-20">
-        {/* Enhanced Main Content dengan glass effect */}
-        <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/60 p-10 rounded-3xl shadow-2xl backdrop-blur-lg border border-gray-700/30">
-          
-          {/* Introduction Section dengan gambar cinematic */}
-          <section className="mb-24">
-            <div className="text-center mb-20">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-16 group">
-                <img
-                  src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=700"
-                  alt="Moviespapa - Premier movie database platform with comprehensive film and TV series information"
-                  width={1920}
-                  height={700}
-                  className="rounded-3xl transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
-                <div className="absolute bottom-10 left-10 text-left max-w-2xl">
-                  <h2 className="text-5xl md:text-6xl font-black mb-6 text-white leading-tight">
-                    Discover Cinematic Excellence with <span className="text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">Moviespapa</span>
-                  </h2>
-                  <p className="text-2xl text-gray-300 leading-relaxed">
-                    America's most comprehensive movie and TV series platform featuring real-time updates, expert reviews, and intelligent recommendations.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="max-w-5xl mx-auto space-y-8">
-                <p className="text-xl text-gray-400 leading-relaxed text-justify">
-                  <strong className="text-orange-400 text-2xl">Moviespapa</strong> stands as America's premier destination for comprehensive movie and TV series information, offering an unparalleled database that caters to both casual viewers and dedicated cinephiles. Our platform represents the culmination of years of development and community feedback, creating a space where entertainment enthusiasts can discover, explore, and engage with cinematic content like never before.
-                </p>
-                
-                <p className="text-xl text-gray-400 leading-relaxed text-justify">
-                  In today's rapidly evolving digital landscape, finding accurate, up-to-date information about movies and television shows can be challenging. <strong className="text-purple-400">Moviespapa solves this problem</strong> by providing a centralized hub that combines detailed metadata, user-generated content, and AI-powered recommendations to enhance your entertainment experience.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Enhanced Features Grid dengan hover effects */}
-          <section className="mb-24">
-            <div className="text-center mb-20">
-              <div className="inline-block bg-gradient-to-r from-orange-500/20 to-purple-500/20 px-8 py-4 rounded-2xl border border-orange-500/30 mb-8 backdrop-blur-sm">
-                <span className="text-orange-300 font-bold text-xl">PREMIUM FEATURES</span>
-              </div>
-              <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-orange-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                Ultimate Movie Experience
-              </h2>
-              <p className="text-2xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
-                Experience the future of movie discovery with our comprehensive suite of features designed for true entertainment enthusiasts.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {[
-                { icon: FaFilm, title: "10,000+ Movies", desc: "Comprehensive database from timeless classics to latest blockbusters with detailed metadata", color: "text-orange-400" },
-                { icon: FaTv, title: "5,000+ TV Series", desc: "Complete TV show information with seasons, episodes, and character development tracking", color: "text-blue-400" },
-                { icon: FaSearch, title: "AI-Powered Search", desc: "Advanced search with filters for genre, year, rating, director, and actor preferences", color: "text-purple-400" },
-                { icon: FaStar, title: "Expert Reviews", desc: "Professional critics reviews combined with authentic community ratings and insights", color: "text-yellow-400" },
-                { icon: FaUsers, title: "Community Driven", desc: "Join millions of movie enthusiasts sharing their passion and creating watchlists", color: "text-green-400" },
-                { icon: FaGlobe, title: "Global Content Hub", desc: "International movies and TV series with multi-language subtitle support", color: "text-red-400" }
-              ].map((feature, index) => (
-                <div key={index} className="group bg-gradient-to-br from-gray-700/30 to-gray-800/50 p-10 rounded-3xl border border-gray-600/30 hover:border-orange-500/60 transition-all duration-500 hover:scale-105 hover:shadow-2xl backdrop-blur-sm">
-                  <div className={`text-6xl mb-8 ${feature.color} group-hover:scale-110 transition-transform duration-500 inline-flex p-5 bg-gray-700/40 rounded-3xl`}>
-                    <feature.icon />
-                  </div>
-                  <h3 className="text-3xl font-bold mb-6 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-yellow-400 group-hover:bg-clip-text">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 leading-relaxed text-lg">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Enhanced Detailed Sections dengan improved SEO content */}
-          <section className="mb-20 bg-gradient-to-r from-gray-800/30 to-gray-900/50 p-12 rounded-3xl border border-gray-700/40 backdrop-blur-sm">
-            <div className="flex items-center gap-6 mb-12">
-              <div className="bg-gradient-to-r from-orange-500/30 to-red-500/30 p-4 rounded-2xl">
-                <FaFilm className="text-4xl text-orange-400" />
-              </div>
-              <h2 className="text-5xl font-black bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
-                Complete Movie Database - America's #1 Source
-              </h2>
-            </div>
-            
-            <div className="space-y-10 text-justify">
-              <p className="text-xl text-gray-300 leading-relaxed">
-                <strong className="text-orange-400">Moviespapa</strong> has established itself as America's most trusted source for comprehensive movie and television information. Our platform serves as an extensive <strong className="text-blue-400">movie database</strong> that goes beyond basic listings to provide deep insights into every aspect of film and television production. With meticulous attention to detail, we've built a resource that film students, critics, and casual viewers alike can rely on for accurate, up-to-date information.
-              </p>
-              
-              <p className="text-xl text-gray-300 leading-relaxed">
-                What sets Moviespapa apart in the crowded space of entertainment platforms is our commitment to depth and accuracy. Each title in our database includes comprehensive details such as complete cast and crew information, production notes, filming locations, box office performance, critical reception, and multiple trailer versions. Our <strong className="text-purple-400">TV series database</strong> is equally detailed, featuring episode guides, season overviews, character arcs, and behind-the-scenes information that enhances the viewing experience.
-              </p>
-              
-              <p className="text-xl text-gray-300 leading-relaxed">
-                For those seeking information on <strong className="text-green-400">latest movies</strong>, our platform provides real-time updates on new releases, including limited theatrical runs, streaming exclusives, and international films making their debut in American markets. Our team of dedicated editors works around the clock to ensure that information about <strong className="text-red-400">popular TV shows</strong> is updated within hours of broadcast, complete with spoiler warnings and episode summaries that respect viewing preferences.
-              </p>
-            </div>
-          </section>
-
-          {/* Enhanced Quick Stats dengan animasi */}
-          <section className="bg-gradient-to-r from-orange-900/30 via-purple-900/30 to-blue-900/30 rounded-3xl p-12 text-center mb-20 border border-orange-500/20 backdrop-blur-sm">
-            <h3 className="text-4xl font-black mb-16 bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
-              Moviespapa in Numbers
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
-              {[
-                { number: "10,000+", label: "Movies", icon: FaFilm, color: "text-orange-400" },
-                { number: "5,000+", label: "TV Series", icon: FaTv, color: "text-blue-400" },
-                { number: "2M+", label: "Active Users", icon: FaUsers, color: "text-green-400" },
-                { number: "500K+", label: "Reviews", icon: FaStar, color: "text-yellow-400" }
-              ].map((stat, index) => (
-                <div key={index} className="group transform-gpu hover:scale-110 transition-all duration-500">
-                  <stat.icon className={`text-5xl ${stat.color} mx-auto mb-6 group-hover:scale-125 transition-transform duration-300`} />
-                  <div className="text-5xl font-black text-white mb-4">{stat.number}</div>
-                  <div className="text-gray-300 font-bold text-xl">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Enhanced Call to Action */}
-          <section className="text-center py-20 bg-gradient-to-br from-gray-800/40 to-gray-900/60 rounded-3xl border border-gray-700/40 backdrop-blur-sm">
-            <h2 className="text-5xl md:text-6xl font-black mb-10 bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
-              Begin Your Cinematic Journey Today!
+      <div className="container mx-auto px-4 py-8">
+        {/* Trending Content Section */}
+        <section className="mb-16" itemScope itemType="https://schema.org/ItemList">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <FaFire className="text-red-500 text-2xl" />
+              Trending Today
+              <span className="text-sm bg-blue-800 text-white px-2 py-1 rounded-full">Daily Updates</span>
             </h2>
-            <p className="text-2xl text-gray-300 mb-14 max-w-4xl mx-auto leading-relaxed">
-              Join our community of <span className="text-orange-400 font-bold">2 million+ movie enthusiasts</span> who trust Moviespapa for accurate information, genuine reviews, and personalized recommendations. Discover hidden gems, revisit classics, and stay updated with the latest releases—all in one place.
-            </p>
-            <div className="flex flex-wrap justify-center gap-8">
-              <Link href="/" className="group bg-gradient-to-r from-blue-600 to-purple-700 hover:from-orange-600 hover:to-orange-700 text-white px-12 py-6 rounded-2xl font-bold text-xl transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-orange-500/40 hover:scale-105 transform-gpu">
-                <FaHome className="text-2xl group-hover:scale-125 transition-transform duration-300" /> 
-                Explore Homepage
-              </Link>
-              <Link href="/movie/genre/action" className="group bg-gradient-to-r from-green-600 to-emerald-700 hover:from-blue-600 hover:to-blue-700 text-white px-12 py-6 rounded-2xl font-bold text-xl transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-blue-500/40 hover:scale-105 transform-gpu">
-                <FaFilm className="text-2xl group-hover:scale-125 transition-transform duration-300" /> 
-                Browse Movies
-              </Link>
+            <div className="text-sm text-gray-400">
+              <span className="text-blue-300">{movieCount} Movies</span> • 
+              <span className="text-purple-300 ml-2">{tvCount} TV Shows</span>
             </div>
-            
-            <div className="mt-16 flex flex-wrap justify-center gap-10 text-xl text-gray-400">
-              <div className="flex items-center gap-4 bg-slate-800/50 px-6 py-3 rounded-full backdrop-blur-sm">
-                <FaCalendarAlt className="text-green-400 text-2xl" />
-                <span>Daily Content Updates</span>
+          </div>
+          
+          {trendingContent.length > 0 ? (
+            <>
+              <meta itemProp="name" content="Trending Movies & TV Shows Today" />
+              <meta itemProp="description" content="Daily updated list of trending movies and TV series across all streaming platforms" />
+              <meta itemProp="numberOfItems" content={trendingContent.length} />
+              
+              {/* Grid for trending content */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
+                {trendingContent.map((item, index) => (
+                  <div key={`${item.id}-${item.media_type}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <meta itemProp="position" content={index + 1} />
+                    <MediaCard item={item} />
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center gap-4 bg-slate-800/50 px-6 py-3 rounded-full backdrop-blur-sm">
-                <FaHeart className="text-red-400 text-2xl" />
-                <span>Community Powered</span>
+              
+              {/* Daily Stats */}
+              <div className="bg-slate-800/50 p-6 rounded-xl mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-center text-orange-300">Today's Trending Stats</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-slate-700/50 p-4 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-white">{trendingContent.length}</div>
+                    <div className="text-gray-300 text-sm">Total Trending Items</div>
+                  </div>
+                  <div className="bg-slate-700/50 p-4 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-blue-300">{movieCount}</div>
+                    <div className="text-gray-300 text-sm">Trending Movies</div>
+                  </div>
+                  <div className="bg-slate-700/50 p-4 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-purple-300">{tvCount}</div>
+                    <div className="text-gray-300 text-sm">Trending TV Shows</div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-4 bg-slate-800/50 px-6 py-3 rounded-full backdrop-blur-sm">
-                <FaRocket className="text-yellow-400 text-2xl" />
-                <span>Lightning Fast</span>
-              </div>
+            </>
+          ) : (
+            <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+              <FaFire className="text-4xl text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No trending content available at the moment. Check back soon!</p>
             </div>
-          </section>
-        </div>
-      </div>
+          )}
+        </section>
 
-      <style jsx>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        @keyframes float-medium {
-          0%, 100% { transform: translateX(0px) translateY(0px); }
-          50% { transform: translateX(10px) translateY(-15px); }
-        }
-        @keyframes float-fast {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-10px) scale(1.1); }
-        }
-        @keyframes glow {
-          0%, 100% { filter: drop-shadow(0 0 20px rgba(255,165,0,0.5)); }
-          50% { filter: drop-shadow(0 0 30px rgba(255,165,0,0.8)); }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
-        .animate-float-medium { animation: float-medium 6s ease-in-out infinite; }
-        .animate-float-fast { animation: float-fast 4s ease-in-out infinite; }
-        .animate-glow { animation: glow 3s ease-in-out infinite; }
-        .animate-fade-in { animation: fade-in 1.5s ease-out; }
-        .animate-slide-up { animation: slide-up 2s ease-out; }
-      `}</style>
+        {/* SEO-Optimized About Section dengan LSI Keywords tambahan */}
+        <section className="mb-16 bg-slate-800/50 p-6 md:p-8 rounded-xl">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center text-orange-300">
+            MoviesPapa: Your Ultimate Streaming Discovery Platform
+          </h2>
+          
+          <div className="space-y-6 text-gray-300">
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">What is MoviesPapa?</h3>
+            
+            <p>
+              MoviesPapa is America's premier movie and TV show discovery platform that answers the most common search queries like <strong>"what's trending on Netflix today"</strong>, <strong>"best movies to watch right now"</strong>, <strong>"top TV shows this week"</strong>, and <strong>"where to stream new releases"</strong>. We provide real-time trending data across all major streaming platforms including Netflix, Disney+, Amazon Prime Video, Hulu, HBO Max, Apple TV+, and free streaming services.
+            </p>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Daily Trending Updates</h3>
+            
+            <p>
+              Unlike traditional movie databases, MoviesPapa focuses on what's trending right now. Our algorithm tracks daily <strong>popularity spikes</strong>, <strong>social media buzz</strong>, and <strong>streaming platform data</strong> to show you exactly what people are watching today. Whether you're searching for <strong>"trending movies 2024"</strong>, <strong>"popular TV series this month"</strong>, or <strong>"what to watch tonight"</strong>, we deliver up-to-the-minute recommendations based on real-world viewing patterns.
+            </p>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Streaming Availability & Platform Integration</h3>
+            
+            <p>
+              Every trending title on MoviesPapa includes detailed <strong>streaming information</strong> showing exactly where you can watch it. We track availability across Netflix, Disney+, Prime Video, Hulu, HBO Max, Peacock, Paramount+, and free ad-supported platforms. Our platform answers queries like <strong>"where to watch [movie title] free"</strong>, <strong>"is [TV show] on Netflix"</strong>, and <strong>"streaming services with [movie]"</strong>. We also monitor regional availability and subscription requirements.
+            </p>
+
+            {/* Popular Genres Section in About */}
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Explore Popular Genres</h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+              {genres.map((genre, index) => (
+                <Link 
+                  key={index} 
+                  href={genre.link}
+                  className="bg-gray-700/50 p-4 rounded-lg hover:bg-gray-600/50 transition flex flex-col items-center justify-center"
+                >
+                  <div className={`font-semibold ${genre.color}`}>
+                    {genre.name}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Browse {genre.name} →
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Comprehensive Content Discovery</h3>
+            
+            <p>
+              MoviesPapa helps you discover content across all genres including <strong>Action</strong>, <strong>Adventure</strong>, <strong>Sci-Fi</strong>, <strong>Anime</strong>, <strong>Crime</strong>, <strong>Horror</strong>, <strong>Comedy</strong>, <strong>Romance</strong>, <strong>Thriller</strong>, <strong>Mystery</strong>, <strong>War</strong>, <strong>Fantasy</strong>, and more. Each trending item includes ratings, reviews, cast information, and similar recommendations. We answer search queries like <strong>"movies like [favorite film]"</strong>, <strong>"best [genre] shows on [platform]"</strong>, and <strong>"top rated [genre] movies 2024"</strong>.
+            </p>
+
+            {/* FAQ Section dengan Schema Markup */}
+            <div className="bg-slate-900/50 p-6 rounded-lg mt-8">
+              <h3 className="text-xl md:text-2xl font-semibold text-orange-300 mb-4 flex items-center gap-2">
+                <FaQuestionCircle /> Frequently Asked Questions
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="faq-item" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <h4 className="font-semibold text-blue-300 mb-2" itemProp="name">How often is trending content updated on MoviesPapa?</h4>
+                  <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p className="text-gray-300" itemProp="text">
+                      We update trending movies and TV shows daily with the latest data from all major streaming platforms including Netflix, Disney+, Prime Video, Hulu, and HBO Max.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="faq-item" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <h4 className="font-semibold text-blue-300 mb-2" itemProp="name">Can I find where to stream movies for free on MoviesPapa?</h4>
+                  <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p className="text-gray-300" itemProp="text">
+                      Yes! MoviesPapa provides information on both free streaming options (ad-supported platforms) and premium subscription services, helping you find the most cost-effective way to watch your favorite content.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="faq-item" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <h4 className="font-semibold text-blue-300 mb-2" itemProp="name">Does MoviesPapa cover international movies and TV shows?</h4>
+                  <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p className="text-gray-300" itemProp="text">
+                      Absolutely. We track trending content from Hollywood blockbusters to international cinema, including anime, Korean dramas, European films, and content from around the world.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="faq-item" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <h4 className="font-semibold text-blue-300 mb-2" itemProp="name">How does MoviesPapa determine what's trending?</h4>
+                  <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p className="text-gray-300" itemProp="text">
+                      Our algorithm analyzes daily popularity spikes, social media buzz, streaming platform data, and viewer engagement metrics to determine what people are watching right now across all major services.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Quality & Viewing Experience</h3>
+            
+            <p>
+              We prioritize viewing quality by highlighting availability in <strong>HD</strong>, <strong>4K</strong>, <strong>HDR</strong>, and <strong>Dolby</strong> formats. Each listing includes content ratings, episode guides for TV series, parental guidance, and accessibility features. MoviesPapa helps users make informed decisions about what to watch based on quality preferences and viewing restrictions.
+            </p>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Why Choose MoviesPapa Over Other Platforms?</h3>
+            
+            <p>
+              MoviesPapa stands out with its real-time trending algorithm, comprehensive streaming availability data, and user-friendly interface. While other platforms show static ratings or editorial picks, MoviesPapa dynamically updates based on what's actually being watched right now across all major streaming services. We combine critic scores with audience popularity and social buzz to give you the most accurate picture of what's worth your time.
+            </p>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Mobile-Optimized & Social Features</h3>
+            
+            <p>
+              Our platform is fully optimized for mobile devices, allowing you to discover trending content on the go. Create personalized watchlists, follow specific actors or directors, receive notifications when trending titles become available on your preferred platforms, and share recommendations with friends. MoviesPapa integrates with social media to show you what your friends are watching and discussing.
+            </p>
+
+            <h3 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">Start Your Streaming Journey Today</h3>
+            
+            <p>
+              Join millions of users who trust MoviesPapa to answer their <strong>"what to watch"</strong> questions. Whether you're searching for <strong>"trending Netflix shows today"</strong>, <strong>"popular movies on Prime Video this week"</strong>, <strong>"new releases on Disney+"</strong>, or <strong>"free streaming movies"</strong>, MoviesPapa provides accurate, timely information to enhance your entertainment experience. Our platform continuously monitors streaming trends, new releases, and audience preferences to ensure you never miss out on must-watch content.
+            </p>
+          </div>
+        </section>
+
+        {/* Final Call to Action */}
+        <section className="text-center py-12 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-2xl border border-slate-700">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6">Never Miss What's Trending</h2>
+          <p className="text-base md:text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+            Get daily updates on the hottest movies and TV shows across all streaming platforms. Discover binge-worthy series, movie recommendations, and new releases 2024.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link 
+              href="/movie/popular" 
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <FaFilm /> Browse Movies
+            </Link>
+            <Link 
+              href="/tv-show/popular" 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <FaTv /> Browse TV Series
+            </Link>
+            <Link 
+              href="/people" 
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <FaUser /> Discover Actors
+            </Link>
+          </div>
+          <p className="mt-8 text-gray-400 max-w-3xl mx-auto text-xs md:text-sm">
+            MoviesPapa • Trending Movies & TV Shows • Daily Updates • Streaming Availability • Netflix • Disney+ • Prime Video • Hulu • HBO Max • Free Streaming • HD Quality • What to Watch • Best Movies 2024 • Popular TV Series • Entertainment Guide • Movie Recommendations • Binge-Watch Series • New Releases • Top Rated Shows
+          </p>
+        </section>
+      </div>
     </div>
   );
 }
+
+// Metadata untuk SEO
+export const metadata = {
+  title: 'MoviesPapa | Trending Movies & TV Shows to Stream Today - Daily Updates',
+  description: 'Watch trending movies and TV series for free. Discover what\'s popular today across Netflix, Disney+, Prime Video. Daily updated trending content, movie recommendations, and binge-worthy series.',
+  keywords: 'trending movies, trending tv shows, watch online free, daily updates, Netflix trending, Disney+ new releases, streaming guide, movie recommendations, binge-watch series, what to watch, new releases 2024, top rated shows, popular TV series',
+  openGraph: {
+    title: 'MoviesPapa | Trending Movies & TV Shows to Stream Today',
+    description: 'Discover what\'s trending today across all streaming platforms. Daily updated with the hottest movies and TV series available to watch online.',
+    url: 'https://moviespapa.netlify.app/',
+    siteName: 'MoviesPapa',
+    images: [
+      {
+        url: 'https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'MoviesPapa - Trending Movies & TV Series to Stream Today',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@MoviesPapaMovies',
+    creator: '@MoviesPapaMovies',
+    title: 'MoviesPapa | Trending Movies & TV Shows to Stream Today',
+    description: 'Discover what\'s trending today across all streaming platforms on MoviesPapa.',
+    images: ['https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg'],
+  },
+  alternates: {
+    canonical: 'https://moviespapa.netlify.app/',
+  },
+};
+
+export const dynamic = 'force-dynamic';

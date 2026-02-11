@@ -2,31 +2,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'image.tmdb.org',
-      'placehold.co'
-    ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'image.tmdb.org',
-        port: '',
         pathname: '/t/p/**',
       },
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
         pathname: '/**',
       },
+      // PERBAIKAN DI SINI:
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',  // ← tempat.com bukan tempat.co
+        pathname: '/**',
+      }
     ],
   },
-  // ✅ PERBAIKAN: Ganti experimental.turbo dengan turbopack
-  turbopack: {
-    // Konfigurasi turbopack (jika ada)
-  },
-  // Opsional: untuk optimisasi deployment
-  output: 'standalone', 
 }
 
-module.exports = nextConfig;
+module.exports = nextConfig

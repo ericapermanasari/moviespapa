@@ -54,12 +54,12 @@ export async function generateMetadata({ params }) {
 
   if (genreSlugMap.has(processedSlug)) {
     const genre = genreSlugMap.get(processedSlug);
-    return { title: `Moviespapa - ${genre.name} TV Series` };
+    return { title: `MovieMovies - ${genre.name} TV Series` };
   }
 
   if (CATEGORIES.includes(slug)) {
     const title = slug.replace(/_/g, ' ').toUpperCase();
-    return { title: `Moviespapa - ${title} TV Series` };
+    return { title: `MovieMovies - ${title} TV Series` };
   }
 
   // Logika untuk mengambil data TV show untuk metadata detail
@@ -98,13 +98,13 @@ export async function generateMetadata({ params }) {
   const socialImageAlt = `${tvShowData.name} poster`;
 
   return {
-    title: `Moviespapa - ${tvShowData.name}`,
+    title: `MovieMovies - ${tvShowData.name}`,
     description: tvShowData.overview,
     openGraph: {
       title: tvShowData.name,
       description: tvShowData.overview,
-      url: `https://moviespapa.netlify.app/tv-show/${slug}`,
-      siteName: 'Moviespapa',
+      url: `https://moviemovies.vercel.app/tv-show/${slug}`,
+      siteName: 'MovieMovies',
       images: [{ url: socialImage, width: 1200, height: 630, alt: socialImageAlt }],
       locale: 'en_US',
       type: 'website',

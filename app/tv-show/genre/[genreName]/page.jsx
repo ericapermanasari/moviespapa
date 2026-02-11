@@ -40,17 +40,17 @@ export async function generateMetadata({ params }) {
 
   const title = genre?.name || 'Unknown';
   
-  const pageUrl = `https://moviespapa.netlify.app/tv-show/genre/${genreName}`;
-  const imageUrl = 'https://live.staticflickr.com/65535/54827245624_9a6913a1bd_b.jpg';
+  const pageUrl = `https://moviemovies.vercel.app/tv-show/genre/${genreName}`;
+  const imageUrl = 'https://live.staticflickr.com/65535/54804572135_3f755a60e7_b.jpg';
 
   return {
-    title: `Moviespapa - ${title} TV Series`,
-    description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
+    title: `Juswatch - ${title} TV Series`,
+    description: `Find and watch the best ${title} TV series for free on Juswatch.`,
     openGraph: {
-      title: `Moviespapa - ${title} TV Series`,
-      description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
+      title: `Juswatch - ${title} TV Series`,
+      description: `Find and watch the best ${title} TV series for free on Juswatch.`,
       url: pageUrl,
-      siteName: 'Moviespapa',
+      siteName: 'Juswatch',
       images: [
         {
           url: imageUrl,
@@ -66,8 +66,8 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       site: '@WatchStream123',
       creator: '@WatchStream123',
-      title: `Moviespapa - ${title} TV Series`,
-      description: `Find and watch the best ${title} TV series for free on Moviespapa.`,
+      title: `Juswatch - ${title} TV Series`,
+      description: `Find and watch the best ${title} TV series for free on Juswatch.`,
       images: [imageUrl],
     },
     other: {
